@@ -300,28 +300,17 @@ class App(tk.Tk):
 
         sel = self.verif_var.get()
         modo = "todos"
-        if sel == "1": modo = "validos"
-        elif sel == "0": modo = "no_validos"
+        if sel == "1":
+            modo = "validos"
+        elif sel == "0":
+            modo = "no_validos"
 
         try:
             anio, mes, dia = map(int, fecha.split("-"))
         except:
+            messagebox.showerror("Error", "Formato de fecha inválido.")
             return
 
-            import sys
-            # Buscar la carpeta del Cubo en una variable de entorno o en rutas comunes
-            cubo_env = os.environ.get("CUBO_PATH")
-            candidate_paths = [cubo_env, r"C:\Users\DNAD\OneDrive\Escritorio\Cubo\Cubo", r"C:\Users\MONICA.ROJAS\Documents\Cubo"]
-            used_cubo_path = None
-            for p in candidate_paths:
-                if not p:
-                    continue
-                if os.path.isdir(p):
-                    if p not in sys.path:
-                        sys.path.append(p)
-                    used_cubo_path = p
-                    break
-        
         try:
             from datos import obtener_centros_por_hora
             df_cubo = obtener_centros_por_hora(anio, mes, dia, modo)
@@ -339,10 +328,11 @@ class App(tk.Tk):
                 fila_total = sum(vec)
                 total_general += fila_total
                 self.tree_cubo.insert("", "end", values=[centro] + vec + [fila_total])
-            
+
             self.lbl_total_cubo.config(text=f"Total general Cubo: {total_general}")
 
         except Exception as e:
+            self.lbl_total_cubo.config(text="Total general Cubo: error")
             messagebox.showerror("Error al cargar Cubo", f"{str(e)}\n\n{traceback.format_exc()}")
 
     def load_comparacion(self):
@@ -378,9 +368,9 @@ class App(tk.Tk):
         
         try:
             from datos import obtener_centros_por_hora, obtener_centros_por_hora_db, comparar_tablas_cubo_vs_db
-            
-            # Cargar datos en la UI de BD y Cubo automáticamente si se le da a comparar directamente
-            self.load_all_data()
+
+            # Cargar datos BD para que la UI muestre la información actual
+            self.load_bd()
 
             df_cubo = obtener_centros_por_hora(anio, mes, dia, modo)
             df_db = obtener_centros_por_hora_db(anio, mes, dia, modo)
@@ -388,6 +378,11 @@ class App(tk.Tk):
             if df_cubo.empty and df_db.empty:
                 messagebox.showinfo("Sin Datos", "Ambas fuentes no tienen datos para esta fecha.")
                 return
+
+            if df_cubo.empty:
+                messagebox.showwarning("Cubo vacío", "El Cubo devolvió datos vacíos para esta fecha.")
+            if df_db.empty:
+                messagebox.showwarning("BD vacía", "La base de datos devolvió datos vacíos para esta fecha.")
 
             res = comparar_tablas_cubo_vs_db(df_cubo, df_db)
 

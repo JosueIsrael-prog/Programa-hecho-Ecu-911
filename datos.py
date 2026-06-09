@@ -131,14 +131,18 @@ def _rows_to_dataframe(rows):
 
 def _rows_for_cubo(fecha, verif):
     cubo_mod = _load_external_cubo_module()
-    if cubo_mod and hasattr(cubo_mod, "incidentes_por_hora"):
-        try:
-            return cubo_mod.incidentes_por_hora(fecha, verif)
-        except Exception as exc:
-            logger.warning("Error ejecutando el cubo externo: %s", exc)
+    if cubo_mod is None:
+        raise FileNotFoundError(
+            f"No se encontró el módulo externo de Cubo en '{CUBE_DATOS_PATH}'. "
+            "Define la variable de entorno CUBO_PATH apuntando a la carpeta o al archivo datos.py del Cubo."
+        )
 
-    logger.info("No se encontró cubo externo. Usando datos de la BD como fallback para el cubo.")
-    return incidentes_por_hora(fecha, verif)
+    if not hasattr(cubo_mod, "incidentes_por_hora"):
+        raise AttributeError(
+            f"El módulo del Cubo cargado desde '{CUBE_DATOS_PATH}' no tiene la función incidentes_por_hora."
+        )
+
+    return cubo_mod.incidentes_por_hora(fecha, verif)
 
 
 def obtener_centros_por_hora(anio, mes, dia, modo="todos"):
