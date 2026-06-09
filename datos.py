@@ -137,12 +137,26 @@ def _rows_for_cubo(fecha, verif):
             "Define la variable de entorno CUBO_PATH apuntando a la carpeta o al archivo datos.py del Cubo."
         )
 
-    if not hasattr(cubo_mod, "incidentes_por_hora"):
-        raise AttributeError(
-            f"El módulo del Cubo cargado desde '{CUBE_DATOS_PATH}' no tiene la función incidentes_por_hora."
-        )
+    if hasattr(cubo_mod, "incidentes_por_hora"):
+        try:
+            return cubo_mod.incidentes_por_hora(fecha, verif)
+        except Exception as exc:
+            raise RuntimeError(f"Error ejecutando incidentes_por_hora del Cubo: {exc}") from exc
 
-    return cubo_mod.incidentes_por_hora(fecha, verif)
+    if hasattr(cubo_mod, "obtener_centros_por_hora"):
+        try:
+            modo = "todos"
+            if verif == 1:
+                modo = "validos"
+            elif verif == 0:
+                modo = "no_validos"
+            return cubo_mod.obtener_centros_por_hora(*map(int, fecha.split("-")), modo)
+        except Exception as exc:
+            raise RuntimeError(f"Error ejecutando obtener_centros_por_hora del Cubo: {exc}") from exc
+
+    raise AttributeError(
+        f"El módulo del Cubo cargado desde '{CUBE_DATOS_PATH}' no tiene la función incidentes_por_hora ni obtener_centros_por_hora."
+    )
 
 
 def obtener_centros_por_hora(anio, mes, dia, modo="todos"):
