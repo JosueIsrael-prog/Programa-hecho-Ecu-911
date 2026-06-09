@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import traceback
+import os
 
 try:
     from db import conn_info
@@ -307,9 +308,19 @@ class App(tk.Tk):
         except:
             return
 
-        import sys
-        if r"c:\Users\MONICA.ROJAS\Documents\Cubo" not in sys.path:
-            sys.path.append(r"c:\Users\MONICA.ROJAS\Documents\Cubo")
+            import sys
+            # Buscar la carpeta del Cubo en una variable de entorno o en rutas comunes
+            cubo_env = os.environ.get("CUBO_PATH")
+            candidate_paths = [cubo_env, r"C:\Users\DNAD\OneDrive\Escritorio\Cubo\Cubo", r"C:\Users\MONICA.ROJAS\Documents\Cubo"]
+            used_cubo_path = None
+            for p in candidate_paths:
+                if not p:
+                    continue
+                if os.path.isdir(p):
+                    if p not in sys.path:
+                        sys.path.append(p)
+                    used_cubo_path = p
+                    break
         
         try:
             from datos import obtener_centros_por_hora
@@ -351,9 +362,19 @@ class App(tk.Tk):
             messagebox.showerror("Error", "Formato de fecha inválido.")
             return
 
-        import sys
-        if r"c:\Users\MONICA.ROJAS\Documents\Cubo" not in sys.path:
-            sys.path.append(r"c:\Users\MONICA.ROJAS\Documents\Cubo")
+            import sys
+            # Buscar la carpeta del Cubo en una variable de entorno o en rutas comunes
+            cubo_env = os.environ.get("CUBO_PATH")
+            candidate_paths = [cubo_env, r"C:\Users\DNAD\OneDrive\Escritorio\Cubo\Cubo", r"C:\Users\MONICA.ROJAS\Documents\Cubo"]
+            used_cubo_path = None
+            for p in candidate_paths:
+                if not p:
+                    continue
+                if os.path.isdir(p):
+                    if p not in sys.path:
+                        sys.path.append(p)
+                    used_cubo_path = p
+                    break
         
         try:
             from datos import obtener_centros_por_hora, obtener_centros_por_hora_db, comparar_tablas_cubo_vs_db
