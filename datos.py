@@ -8,19 +8,39 @@ import pandas as pd
 from incidentes_repo import incidentes_por_hora
 
 logger = logging.getLogger(__name__)
-CUBE_DATOS_PATH = None
 
-# Determinar la ruta al módulo de datos del Cubo: usar la variable de
-# entorno `CUBO_PATH` (puede ser carpeta o ruta completa al archivo datos.py),
-# y si no existe usar la ruta por defecto que había en el proyecto.
-cubo_env = os.environ.get('CUBO_PATH')
-if cubo_env:
-    if os.path.isdir(cubo_env):
-        CUBE_DATOS_PATH = os.path.join(cubo_env, 'datos.py')
-    else:
-        CUBE_DATOS_PATH = cubo_env
-else:
-    CUBE_DATOS_PATH = r"c:\Users\MONICA.ROJAS\Documents\Cubo\datos.py"
+
+def _expand_path(path):
+    if not path:
+        return None
+    return os.path.abspath(os.path.expanduser(os.path.expandvars(path)))
+
+
+def _candidate_cubo_paths():
+    home = os.path.expanduser("~")
+    candidates = [
+        os.environ.get('CUBO_PATH'),
+        os.path.join(home, "OneDrive", "Escritorio", "Cubo", "Cubo"),
+        os.path.join(home, "Documents", "Cubo"),
+        os.path.join(home, "OneDrive", "Documents", "Cubo"),
+        os.path.join(os.path.dirname(__file__), "..", "Cubo"),
+        os.path.join(os.path.dirname(__file__), "..", "Cubo", "Cubo"),
+        os.path.join(os.path.dirname(__file__), "..", "Cubo", "datos.py"),
+    ]
+    return [p for p in (_expand_path(candidate) for candidate in candidates) if p]
+
+
+def _resolve_cubo_module_path():
+    for candidate in _candidate_cubo_paths():
+        if os.path.isdir(candidate):
+            candidate_path = os.path.join(candidate, 'datos.py')
+            if os.path.isfile(candidate_path):
+                return candidate_path
+        elif os.path.isfile(candidate) and os.path.basename(candidate).lower() == 'datos.py':
+            return candidate
+    return None
+
+CUBE_DATOS_PATH = _resolve_cubo_module_path()
 
 
 def _load_external_cubo_module():
@@ -77,18 +97,46 @@ def _cubo_csv_to_dataframe(csv_path):
     return df
 
 
-def _find_cubo_export_csv(fecha):
-    search_base = CUBE_DATOS_PATH
-    if os.path.isfile(search_base):
-        search_base = os.path.dirname(search_base)
-
+def _find_cubo_base_folders():
     candidates = []
-    for folder in [search_base, os.path.join(search_base, "exports", "facts"), os.path.join(search_base, "exports")]:
-        if not folder or not os.path.isdir(folder):
+    if CUBE_DATOS_PATH:
+        if os.path.isfile(CUBE_DATOS_PATH):
+            candidates.append(os.path.dirname(CUBE_DATOS_PATH))
+        elif os.path.isdir(CUBE_DATOS_PATH):
+            candidates.append(CUBE_DATOS_PATH)
+
+    for path in _candidate_cubo_paths():
+        if os.path.isfile(path):
+            candidates.append(os.path.dirname(path))
+        elif os.path.isdir(path):
+            candidates.append(path)
+
+    candidates.extend([
+        os.getcwd(),
+        os.path.dirname(__file__),
+    ])
+
+    normalized = []
+    for folder in candidates:
+        if not folder:
             continue
-        patterns = [f"*{fecha.replace('-', '_')}*.csv", f"*{fecha.replace('-', '')}*.csv", f"*.csv"]
-        for pattern in patterns:
-            candidates.extend(glob.glob(os.path.join(folder, pattern)))
+        path = os.path.abspath(folder)
+        if path not in normalized:
+            normalized.append(path)
+    return normalized
+
+
+def _find_cubo_export_csv(fecha):
+    candidates = []
+    for base in _find_cubo_base_folders():
+        for folder in [base, os.path.join(base, "exports", "facts"), os.path.join(base, "exports")]:
+            if not os.path.isdir(folder):
+                continue
+            patterns = [f"*{fecha.replace('-', '_')}*.csv", f"*{fecha.replace('-', '')}*.csv", f"*.csv"]
+            for pattern in patterns:
+                candidates.extend(glob.glob(os.path.join(folder, pattern)))
+            if candidates:
+                break
         if candidates:
             break
 

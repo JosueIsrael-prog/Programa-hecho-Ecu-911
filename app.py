@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import traceback
 import os
+import sys
 
 try:
     from db import conn_info
@@ -352,20 +353,34 @@ class App(tk.Tk):
             messagebox.showerror("Error", "Formato de fecha inválido.")
             return
 
-            import sys
-            # Buscar la carpeta del Cubo en una variable de entorno o en rutas comunes
-            cubo_env = os.environ.get("CUBO_PATH")
-            candidate_paths = [cubo_env, r"C:\Users\DNAD\OneDrive\Escritorio\Cubo\Cubo", r"C:\Users\MONICA.ROJAS\Documents\Cubo"]
-            used_cubo_path = None
-            for p in candidate_paths:
-                if not p:
-                    continue
-                if os.path.isdir(p):
-                    if p not in sys.path:
-                        sys.path.append(p)
-                    used_cubo_path = p
-                    break
-        
+        cubo_env = os.environ.get("CUBO_PATH")
+        candidate_paths = [
+            cubo_env,
+            os.path.join(os.path.expanduser("~"), "OneDrive", "Escritorio", "Cubo", "Cubo"),
+            os.path.join(os.path.expanduser("~"), "Documents", "Cubo"),
+            os.path.join(os.path.expanduser("~"), "OneDrive", "Documents", "Cubo"),
+            os.path.join(os.path.dirname(__file__), "Cubo"),
+            os.path.join(os.path.dirname(__file__), "..", "Cubo"),
+        ]
+        used_cubo_path = None
+        for p in candidate_paths:
+            if not p:
+                continue
+            if os.path.isdir(p):
+                if p not in sys.path:
+                    sys.path.append(p)
+                used_cubo_path = p
+                break
+            if os.path.isfile(p) and os.path.basename(p).lower() == "datos.py":
+                folder = os.path.dirname(p)
+                if folder not in sys.path:
+                    sys.path.append(folder)
+                used_cubo_path = p
+                break
+
+        if used_cubo_path and not cubo_env:
+            os.environ["CUBO_PATH"] = used_cubo_path
+
         try:
             from datos import obtener_centros_por_hora, obtener_centros_por_hora_db, comparar_tablas_cubo_vs_db
 
