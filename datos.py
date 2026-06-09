@@ -6,7 +6,19 @@ import pandas as pd
 from incidentes_repo import incidentes_por_hora
 
 logger = logging.getLogger(__name__)
-CUBE_DATOS_PATH = r"c:\Users\MONICA.ROJAS\Documents\Cubo\datos.py"
+CUBE_DATOS_PATH = None
+
+# Determinar la ruta al módulo de datos del Cubo: usar la variable de
+# entorno `CUBO_PATH` (puede ser carpeta o ruta completa al archivo datos.py),
+# y si no existe usar la ruta por defecto que había en el proyecto.
+cubo_env = os.environ.get('CUBO_PATH')
+if cubo_env:
+    if os.path.isdir(cubo_env):
+        CUBE_DATOS_PATH = os.path.join(cubo_env, 'datos.py')
+    else:
+        CUBE_DATOS_PATH = cubo_env
+else:
+    CUBE_DATOS_PATH = r"c:\Users\MONICA.ROJAS\Documents\Cubo\datos.py"
 
 
 def _load_external_cubo_module():
