@@ -1,3 +1,4 @@
+import glob
 import importlib.util
 import logging
 import os
@@ -33,6 +34,60 @@ def _load_external_cubo_module():
     except Exception as exc:
         logger.warning("No se pudo cargar el módulo de cubo externo '%s': %s", CUBE_DATOS_PATH, exc)
         return None
+
+
+def _cubo_csv_to_dataframe(csv_path):
+    df_csv = pd.read_csv(csv_path)
+    if "CenterName" in df_csv.columns and "Hora" in df_csv.columns:
+        value_col = None
+        for candidate in ["Conteo", "SumaIncidentes", "Value", "Count"]:
+            if candidate in df_csv.columns:
+                value_col = candidate
+                break
+        if value_col is None:
+            raise ValueError("CSV de Cubo encontrado pero no contiene columna de valores esperada.")
+
+        df = df_csv.pivot_table(
+            index="CenterName",
+            columns="Hora",
+            values=value_col,
+            aggfunc="sum",
+            fill_value=0,
+        )
+    elif "CenterName" in df_csv.columns:
+        # Puede ser un CSV ya pivotado con columnas de horas
+        hour_cols = [c for c in df_csv.columns if str(c).isdigit() or (isinstance(c, str) and c.isdigit())]
+        if not hour_cols:
+            raise ValueError("CSV de Cubo no tiene columnas de hora reconocibles.")
+        df = df_csv.set_index("CenterName")[hour_cols]
+    else:
+        raise ValueError("CSV de Cubo no tiene la columna CenterName.")
+
+    for h in range(24):
+        if h not in df.columns:
+            df[h] = 0
+
+    df = df.reindex(columns=range(24), fill_value=0)
+    df = df.sort_index()
+    return df
+
+
+def _find_cubo_export_csv(fecha):
+    search_base = CUBE_DATOS_PATH
+    if os.path.isfile(search_base):
+        search_base = os.path.dirname(search_base)
+
+    candidates = []
+    for folder in [search_base, os.path.join(search_base, "exports", "facts"), os.path.join(search_base, "exports")]:
+        if not folder or not os.path.isdir(folder):
+            continue
+        patterns = [f"*{fecha.replace('-', '_')}*.csv", f"*{fecha.replace('-', '')}*.csv", f"*.csv"]
+        for pattern in patterns:
+            candidates.extend(glob.glob(os.path.join(folder, pattern)))
+        if candidates:
+            break
+
+    return candidates
 
 
 def _modo_to_verif(modo):
@@ -141,21 +196,28 @@ def _rows_for_cubo(fecha, verif):
         try:
             return cubo_mod.incidentes_por_hora(fecha, verif)
         except Exception as exc:
-            raise RuntimeError(f"Error ejecutando incidentes_por_hora del Cubo: {exc}") from exc
+            logger.warning("Error ejecutando incidentes_por_hora del Cubo: %s", exc)
 
     if hasattr(cubo_mod, "obtener_centros_por_hora"):
         try:
-            modo = "todos"
-            if verif == 1:
-                modo = "validos"
-            elif verif == 0:
-                modo = "no_validos"
-            return cubo_mod.obtener_centros_por_hora(*map(int, fecha.split("-")), modo)
+            return cubo_mod.obtener_centros_por_hora(*map(int, fecha.split("-")), "todos" if verif is None else ("validos" if verif == 1 else "no_validos"))
         except Exception as exc:
-            raise RuntimeError(f"Error ejecutando obtener_centros_por_hora del Cubo: {exc}") from exc
+            logger.warning("Error ejecutando obtener_centros_por_hora del Cubo: %s", exc)
 
-    raise AttributeError(
-        f"El módulo del Cubo cargado desde '{CUBE_DATOS_PATH}' no tiene la función incidentes_por_hora ni obtener_centros_por_hora."
+    # Intentar cargar CSV de exportación del Cubo si la conexión MDX falla
+    csv_files = _find_cubo_export_csv(fecha)
+    if csv_files:
+        for csv_file in csv_files:
+            try:
+                logger.info("Cargando datos del Cubo desde CSV: %s", csv_file)
+                return _cubo_csv_to_dataframe(csv_file)
+            except Exception as exc:
+                logger.warning("No se pudo parsear CSV del Cubo '%s': %s", csv_file, exc)
+
+    raise RuntimeError(
+        "No se pudieron obtener datos del Cubo. "
+        "Verifica que CUBO_PATH apunte a la carpeta correcta y que el proveedor MSOLAP esté instalado, "
+        "o coloca CSV exportados del Cubo en CUBO_PATH/exports/facts/."
     )
 
 
