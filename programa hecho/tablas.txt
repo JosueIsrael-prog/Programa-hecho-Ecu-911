@@ -1,0 +1,345 @@
+
+
+pip install -r requerimientos.txt
+
+python -m pip install --upgrade pip
+
+
+
+
+
+
+
+
+
+
+/////////////BASE ECU911DMS DWH///////////
+
+
+Login sql
+Servidor: 
+Base: ECU911DMS
+ereporte
+3st@distic@
+
+
+
+//////////////////////////////////////////
+
+
+
+
+
+
+
+///////////////////CONEXION/////////////
+import pyodbc
+import traceback
+
+SERVER = "10.121.5.80"
+DATABASE = "ECU911DMS"
+UID = r"ereporte"
+PWD = "3st@distic@"
+
+
+DRIVER_CANDIDATES = [
+    "ODBC Driver 18 for SQL Server"
+  
+]
+
+def try_connect(conn_str):
+    try:
+        conn = pyodbc.connect(conn_str, timeout=10)
+        return conn
+    except Exception as e:
+        return e
+
+def list_tables(conn):
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT TABLE_SCHEMA, TABLE_NAME
+            FROM INFORMATION_SCHEMA.TABLES
+            WHERE TABLE_TYPE='BASE TABLE'
+            ORDER BY TABLE_SCHEMA, TABLE_NAME
+        """)
+        rows = cur.fetchall()
+        if not rows:
+            print("No se pudo encoontrar tablas.")
+            return
+        print("Tablas encontradas:")
+        for sch, name in rows:
+            print(f" - {sch}.{name}")
+    except Exception:
+        print("Error al listar tablas:")
+        traceback.print_exc()
+
+def attempt_odbc_only():
+    for driver in DRIVER_CANDIDATES:
+        print(f"\nProbando driver: {driver}")
+
+        # ODBC con UID/PWD
+        conn_str = (
+            f"DRIVER={{{driver}}};"
+            f"SERVER={SERVER};"
+            f"DATABASE={DATABASE};"
+            f"UID={UID};"
+            f"PWD={PWD};"
+            "Encrypt=yes;"
+            "TrustServerCertificate=yes;"
+        )
+
+        print(" -> Intentando conexion ODBC con usuario/clave...")
+        r = try_connect(conn_str)
+        if isinstance(r, pyodbc.Connection):
+            print("Conectado OK con:", driver)
+            list_tables(r)
+            r.close()
+            return True
+        else:
+            print("   Fallo:", type(r).__name__, str(r))
+
+    print("\nNo se pudo conectar con ningun driver ODBC probado.")
+    return False
+
+if __name__ == "__main__":
+    print("Iniciando prueba de conexion a SQL Server (solo ODBC con UID/PWD)")
+    ok = attempt_odbc_only()
+    if not ok:
+        print("\n-- No valio :(")
+    else:
+        print("\nConexion OK — ya listaste las tablas.")
+
+
+
+///////////////////////////////////////////////////////
+
+
+
+
+runas /netonly /user:dwh\ana.cartagena "cmd"
+
+
+cd C:\Users\MONICA.ROJAS\Documents\Proyecto
+.\.venv\Scripts\activate.bat
+python prueba.py
+
+
+
+
+
+
+
+
+//dbo.DIM_Mes
+
+ dbo.DIM_Fecha
+
+dbo.DIM_Center
+
+dbo.DIM_Hora
+
+ dbo.DIM_Servicio
+
+dbo.DIM_Verificador    FILTRO 1 VALIDOS Y 0 NO VALIDOS
+
+
+dbo.DMH_INCIDENT
+
+
+ dbo.DMH_LLAMADAS
+
+
+
+
+
+
+
+== dbo.DIM_Center ==
+ - CenterId                       int     
+ - CenterTypeId                   int     
+ - CenterName                     nvarchar
+ - SupertelId                     int     
+ - transito                       int     
+
+== dbo.DIM_Fecha ==
+ - Fecha                          int     
+ - Anio                           int     
+ - Mes                            int     
+ - Semana                         int     
+ - Dia                            int     
+ - FechaId                        int     
+ - fechad                         date    
+ - diasemana                      int     
+ - nombredia                      nvarchar
+ - nombremes                      nvarchar
+ - trimestre                      nvarchar
+
+== dbo.DIM_Verificador ==
+ - CodVerificador                 int
+ - Descripcion                    varchar
+
+== dbo.DMH_INCIDENT ==
+ - IncidentInformationId          nvarchar
+ - IncidentNumber                 nvarchar
+ - IncidentAppealInformationId    nvarchar
+ - IncidentAppealCount            int
+ - IncidentAppealResourcesCount   int
+ - IncidentDiaposalCount          int
+ - IncidentGradeId                int
+ - CombinationNumbers             nvarchar
+ - CombinationDescription         nvarchar
+ - IncidentTypeChangedCount       int
+ - IncidentOldTypeId              numeric
+ - CenterId                       int
+ - starttime                      datetime
+ - endtime                        datetime
+ - IncidentDisposalTypeId         int
+ - T_Fase1                        time
+ - T_Fase2                        time
+ - T_Transferencia                time
+ - T_Grabacion1                   time
+ - T_Grabacion2                   time
+ - T_Grabacion3                   time
+ - T_Grabacion4                   time
+ - T_Grabacion5                   time
+ - T_Grabacion6                   time
+ - T_Grabacion7                   time
+ - tdi                            time
+ - INCIDENTSTATEID                numeric
+ - tipodespacho                   nvarchar
+ - Combinationinstituciones       nvarchar
+ - FechaId                        int
+ - GestionTypeId                  int
+ - GeoReferenciacionDiv_AdmObjectidId int
+ - GeoReferenciacionDiv_PolObjectidId int
+ - IncidentTypeId                 numeric
+ - longitud                       float
+ - latitud                        float
+ - INVALIDINCIDENTTYPEID          numeric
+ - GeoReferenciacionDiv_AdmId     nvarchar
+ - GeoReferenciacionDiv_PolId     nvarchar
+ - IncidentNewTypeId              numeric
+ - InvalidIncidentNewTypeId       numeric
+ - StatusIncident                 int
+ - HoraIdI                        int
+ - HoraId                         int
+ - EmergencyRate                  float
+ - EmergencyRateCanton            float
+ - EmergencyRateProvince          float
+ - IncidentTypeId2                numeric
+ - GeoUbicacion                   geography
+ - horaidhms                      varchar
+
+== dbo.DMH_LLAMADAS ==
+ - IncidentAppealInfoConsInva     nvarchar
+ - CenterId                       int
+ - FechaId                        int
+ - IncidentInformationId          nvarchar
+ - IncidentAppealTypeId           numeric
+ - IncidentAppealNewTypeId        numeric
+ - CampaId                        nvarchar
+ - InvalidIncidentTypeId          numeric
+ - InvalidIncidentNewTypeId       numeric
+ - OrgPersonId                    nvarchar
+ - IndicentTypeId                 numeric
+ - IndicentNewTypeId              numeric
+ - IncidentGradeId                int
+ - SeatInformationId              nvarchar
+ - TurnId                         int
+ - TurnNewId                      int
+ - LlamadaContestada              nvarchar
+ - HoraId                         int
+ - GeoReferenciacionId            uniqueidentifier
+ - RankteId                       int
+ - RanktlfId                      int
+ - tipoalerta                     nvarchar
+ - incidentdescripcion            nvarchar
+ - incidentreportman              nvarchar
+ - alertas                        int
+ - alertasnetas                   int
+ - incidentReportphone            nvarchar
+ - incidentaddress                nvarchar
+ - contactphone                   nvarchar
+ - longitud                       float
+ - latitud                        float
+ - tiempoespera                   time
+ - tiempoatencionllamada          time
+ - tiempollenadoficha             time
+ - tiempoatencionalerta           time
+ - TiempoRegistroAlerta           time
+ - tipocuenta                     int
+ - IncidentGradeIdIncidente       int
+ - subcategoria_mics              int
+ - subcategoria2_mics             int
+ - InTime                         datetime
+ - OnTime                         datetime
+ - UnTime                         datetime
+ - IncidentTime                   datetime
+ - IncidentAppealTime             datetime
+ - incidentreportmanaddress       nvarchar
+ - IndicentOldTypeId              numeric
+ - tipoinfoconsinva               nvarchar
+ - Reportado2Por                  varchar
+ - GeoReferenciacionDiv_AdmId     nvarchar
+ - GeoReferenciacionDiv_PolId     varchar
+ - IsFastRecord                   nvarchar
+ - OrgPersonGroupId               nchar
+ - GeoReferenciacionDiv_AdmObjectidId int
+ - GeoReferenciacionDiv_PolObjectidId int
+ - HoraIdI                        int
+ - IncidentTypeId2                numeric
+ - horaidhms                      varchar
+
+== dbo.DIM_Servicio ==
+ - IncidentTypeId                 numeric
+ - IncidentTypeIdCode             nvarchar
+ - IncidentTypeName               nvarchar
+ - ParentId                       numeric
+ - RoleId                         nvarchar
+ - IsEnable                       numeric
+ - NewIncidentTypeName_ConTildes  nvarchar
+ - relevante                      nvarchar
+ - SubCategoria2_Mics             int
+ - Categoria_Estadistica_Nivel2   int
+ - Categoria_Policial             int
+ - Categoria_Estadistica          int
+
+== dbo.DIM_Mes ==
+ - MesId                          int
+ - MesName                        nvarchar
+
+== dbo.DIM_Hora ==
+ - HoraId                         int
+ - Hora                           int
+ - FechaId                        int
+
+
+
+
+
+
+
+
+
+
+
+dbo.DIM_Verificador con solo CodVerificador (0 = no válido, 1 = válido)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
