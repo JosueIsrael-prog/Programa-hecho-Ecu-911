@@ -2,6 +2,7 @@ import glob
 import importlib.util
 import logging
 import os
+import sys
 
 import pandas as pd
 from incidentes_repo import incidentes_por_hora
@@ -27,6 +28,10 @@ def _load_external_cubo_module():
         return None
 
     try:
+        cubo_folder = os.path.dirname(CUBE_DATOS_PATH)
+        if cubo_folder not in sys.path:
+            sys.path.insert(0, cubo_folder)
+
         spec = importlib.util.spec_from_file_location("datos_cubo", CUBE_DATOS_PATH)
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
