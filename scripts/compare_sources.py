@@ -8,11 +8,11 @@ if PROJ_ROOT not in sys.path:
     sys.path.insert(0, PROJ_ROOT)
 
 # Ajusta aquí la fecha que quieras comprobar
-FECHA = '2026-03-01'
+FECHA = '2025-11-17'
 VERIF = None  # None todos, or 1, or 0
 
-# Ruta del Cubo local (ajusta si tu carpeta es distinta)
-os.environ['CUBO_PATH'] = r"C:\Users\DNAD\OneDrive\Escritorio\Cubo\Cubo"
+# Apuntar a la nueva carpeta que arrastraste al proyecto
+os.environ['CUBO_PATH'] = os.path.join(PROJ_ROOT, "Cubos")
 
 # Asegurar que el path del cubo esté en sys.path
 cubo_path = os.environ.get('CUBO_PATH')

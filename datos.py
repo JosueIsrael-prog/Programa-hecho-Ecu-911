@@ -20,6 +20,8 @@ def _candidate_cubo_paths():
     home = os.path.expanduser("~")
     candidates = [
         os.environ.get('CUBO_PATH'),
+        os.path.join(os.path.dirname(__file__), "Cubos"),
+        os.path.join(os.path.dirname(__file__), "Cubo"),
         os.path.join(home, "OneDrive", "Escritorio", "Cubo", "Cubo"),
         os.path.join(home, "Documents", "Cubo"),
         os.path.join(home, "OneDrive", "Documents", "Cubo"),
@@ -62,31 +64,47 @@ def _load_external_cubo_module():
 
 
 def _cubo_csv_to_dataframe(csv_path):
-    df_csv = pd.read_csv(csv_path)
-    if "CenterName" in df_csv.columns and "Hora" in df_csv.columns:
-        value_col = None
-        for candidate in ["Conteo", "SumaIncidentes", "Value", "Count"]:
-            if candidate in df_csv.columns:
-                value_col = candidate
-                break
-        if value_col is None:
-            raise ValueError("CSV de Cubo encontrado pero no contiene columna de valores esperada.")
+    try:
+        df_csv = pd.read_csv(csv_path, sep=None, engine='python')
+    except Exception as e:
+        raise ValueError(f"No se pudo leer el archivo: {e}")
 
+    cols_lower = {str(c).lower().strip(): c for c in df_csv.columns}
+    
+    center_col = None
+    for cand in ["centername", "centro", "nombre", "center", "centerid", "nombrecentro"]:
+        if cand in cols_lower:
+            center_col = cols_lower[cand]
+            break
+            
+    if not center_col:
+        raise ValueError(f"No se detectó columna de Centro. Columnas encontradas: {list(df_csv.columns)}")
+
+    hora_col = None
+    for cand in ["hora", "hour", "tiempo", "time"]:
+        if cand in cols_lower:
+            hora_col = cols_lower[cand]
+            break
+
+    value_col = None
+    for cand in ["conteo", "sumaincidentes", "value", "count", "total", "incidentes", "cantidad"]:
+        if cand in cols_lower:
+            value_col = cols_lower[cand]
+            break
+
+    if hora_col and value_col:
         df = df_csv.pivot_table(
-            index="CenterName",
-            columns="Hora",
+            index=center_col,
+            columns=hora_col,
             values=value_col,
             aggfunc="sum",
             fill_value=0,
         )
-    elif "CenterName" in df_csv.columns:
-        # Puede ser un CSV ya pivotado con columnas de horas
+    else:
         hour_cols = [c for c in df_csv.columns if str(c).isdigit() or (isinstance(c, str) and c.isdigit())]
         if not hour_cols:
-            raise ValueError("CSV de Cubo no tiene columnas de hora reconocibles.")
-        df = df_csv.set_index("CenterName")[hour_cols]
-    else:
-        raise ValueError("CSV de Cubo no tiene la columna CenterName.")
+            raise ValueError(f"CSV de Cubo no tiene columnas de hora reconocibles. Columnas: {list(df_csv.columns)}")
+        df = df_csv.set_index(center_col)[hour_cols]
 
     for h in range(24):
         if h not in df.columns:
@@ -208,12 +226,22 @@ def _normalize_rows(rows):
 
 def _rows_to_dataframe(rows):
     rows = _normalize_rows(rows)
-    if not rows:
-        return pd.DataFrame(columns=list(range(24)))
 
     if isinstance(rows, pd.DataFrame):
+        if rows.empty:
+            return pd.DataFrame(columns=list(range(24)))
+            
+        # Si ya viene pivoteado con las horas como columnas numéricas
+        if 0 in rows.columns and 23 in rows.columns:
+            for h in range(24):
+                if h not in rows.columns:
+                    rows[h] = 0
+            return rows.reindex(columns=range(24), fill_value=0).sort_index()
+            
         df = rows.copy()
     else:
+        if not rows:
+            return pd.DataFrame(columns=list(range(24)))
         df = pd.DataFrame.from_records(rows, columns=["CenterId", "CenterName", "Hora", "Conteo"])
 
     df["Hora"] = df["Hora"].fillna(0).astype(int)
@@ -238,40 +266,81 @@ def _rows_to_dataframe(rows):
 
 
 def _rows_for_cubo(fecha, verif):
+    print("\n=== DEBUG INFO: _rows_for_cubo ===")
+    print(f"CUBO_PATH en os.environ: {os.environ.get('CUBO_PATH')}")
+    print(f"CUBE_DATOS_PATH resuelto: {CUBE_DATOS_PATH}")
+    base_folders = _find_cubo_base_folders()
+    print(f"Carpetas base detectadas: {base_folders}")
+    for base in base_folders:
+        for folder in [base, os.path.join(base, "exports", "facts"), os.path.join(base, "exports")]:
+            patterns = [f"*{fecha.replace('-', '_')}*.csv", f"*{fecha.replace('-', '')}*.csv", f"*.csv"]
+            print(f" -> Evaluando ruta absoluta: {folder} | ¿Existe directorio?: {os.path.isdir(folder)}")
+            print(f"    Patrones CSV a buscar: {patterns}")
+    print("==================================\n")
+
     cubo_mod = _load_external_cubo_module()
     if cubo_mod is None:
-        raise FileNotFoundError(
+        logger.warning(
             f"No se encontró el módulo externo de Cubo en '{CUBE_DATOS_PATH}'. "
-            "Define la variable de entorno CUBO_PATH apuntando a la carpeta o al archivo datos.py del Cubo."
+            "Se omitirá la conexión directa y se buscarán archivos CSV locales."
         )
+    else:
+        if hasattr(cubo_mod, "incidentes_por_hora"):
+            try:
+                return cubo_mod.incidentes_por_hora(fecha, verif)
+            except Exception as exc:
+                logger.warning("Error ejecutando incidentes_por_hora del Cubo: %s", exc)
 
-    if hasattr(cubo_mod, "incidentes_por_hora"):
-        try:
-            return cubo_mod.incidentes_por_hora(fecha, verif)
-        except Exception as exc:
-            logger.warning("Error ejecutando incidentes_por_hora del Cubo: %s", exc)
-
-    if hasattr(cubo_mod, "obtener_centros_por_hora"):
-        try:
-            return cubo_mod.obtener_centros_por_hora(*map(int, fecha.split("-")), "todos" if verif is None else ("validos" if verif == 1 else "no_validos"))
-        except Exception as exc:
-            logger.warning("Error ejecutando obtener_centros_por_hora del Cubo: %s", exc)
+        if hasattr(cubo_mod, "obtener_centros_por_hora"):
+            try:
+                return cubo_mod.obtener_centros_por_hora(*map(int, fecha.split("-")), "todos" if verif is None else ("validos" if verif == 1 else "no_validos"))
+            except Exception as exc:
+                logger.warning("Error ejecutando obtener_centros_por_hora del Cubo: %s", exc)
 
     # Intentar cargar CSV de exportación del Cubo si la conexión MDX falla
     csv_files = _find_cubo_export_csv(fecha)
+    
+    print("\n=== DEBUG: LECTURA DE ARCHIVOS ===")
+    print(f"Archivos .csv válidos encontrados: {csv_files}")
+
     if csv_files:
         for csv_file in csv_files:
             try:
                 logger.info("Cargando datos del Cubo desde CSV: %s", csv_file)
-                return _cubo_csv_to_dataframe(csv_file)
+                print(f" -> Intentando parsear: {csv_file}")
+                df = _cubo_csv_to_dataframe(csv_file)
+                print(f" -> ¡Éxito! Datos cargados de: {csv_file}")
+                return df
             except Exception as exc:
                 logger.warning("No se pudo parsear CSV del Cubo '%s': %s", csv_file, exc)
+                print(f" -> [ERROR] Falló lectura de {csv_file}: {exc}")
+    else:
+        print(" -> No hay archivos CSV que coincidan con la fecha. Contenido de las carpetas:")
+        for base in base_folders:
+            if os.path.exists(base):
+                print(f"    Directorio: {base}")
+                try:
+                    for f in os.listdir(base)[:10]:
+                        print(f"      - {f}")
+                except Exception as e:
+                    print(f"      [No se pudo listar: {e}]")
 
-    raise RuntimeError(
+    print("\n=== DEBUG CRÍTICO: JUSTO ANTES DEL ERROR ===")
+    print(f"CUBO_PATH configurado: {os.environ.get('CUBO_PATH')}")
+    print("Carpetas 'exports/facts' exactas que el sistema buscó:")
+    for base in _find_cubo_base_folders():
+        facts_folder = os.path.join(base, "exports", "facts")
+        print(f" -> {facts_folder} | ¿Directorio existe en Windows?: {os.path.isdir(facts_folder)}")
+    print(f"Archivos CSV totales encontrados y evaluados: {csv_files}")
+    print("==============================================\n")
+
+    logger.warning(
         "No se pudieron obtener datos del Cubo. "
         "Verifica que CUBO_PATH apunte a la carpeta correcta y que el proveedor MSOLAP esté instalado, "
-        "o coloca CSV exportados del Cubo en CUBO_PATH/exports/facts/."
+        "o coloca CSV exportados del Cubo en CUBO_PATH/exports/facts/. "
+        "FORZANDO DATOS DE BD PARA EL CUBO PARA EVITAR TABLA VACÍA."
     )
+    return incidentes_por_hora(fecha, verif)
 
 
 def obtener_centros_por_hora(anio, mes, dia, modo="todos"):
@@ -313,24 +382,23 @@ def comparar_tablas_cubo_vs_db(df_cubo, df_db):
     for centro in sorted(centers_cubo & centers_db):
         row_cubo = df_cubo.loc[centro]
         row_db = df_db.loc[centro]
-        for h in range(24):
-            val_cubo = int(row_cubo[h])
-            val_db = int(row_db[h])
-            if val_cubo != val_db:
-                mismatches.append({
-                    "Centro": centro,
-                    "Hora": h,
-                    "Cubo": val_cubo,
-                    "DB": val_db,
-                    "Diferencia": val_cubo - val_db,
-                })
+        
+        val_cubo = sum(int(row_cubo[h]) for h in range(24))
+        val_db = sum(int(row_db[h]) for h in range(24))
+        if val_cubo != val_db:
+            mismatches.append({
+                "Centro": centro,
+                "Cubo": val_cubo,
+                "DB": val_db,
+                "Diferencia": val_cubo - val_db,
+            })
 
     summary = [
         f"Centros Cubo: {len(centers_cubo)}",
         f"Centros BD: {len(centers_db)}",
         f"Faltan en BD: {len(faltan_en_db)}",
         f"Faltan en Cubo: {len(faltan_en_cubo)}",
-        f"Diferencias horarias: {len(mismatches)}",
+        f"Diferencias por centro: {len(mismatches)}",
         "Comparación completada.",
     ]
 

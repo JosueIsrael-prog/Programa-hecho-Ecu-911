@@ -1,0 +1,8 @@
+[DMH_INCIDENT].[IncidentTypeId].[IncidentTypeId].[MEMBER_UNIQUE_NAME],[DMH_INCIDENT].[IncidentTypeId].[IncidentTypeId].[MEMBER_CAPTION],[Measures].[SumaIncidentes]
+[DMH_INCIDENT].[IncidentTypeId].&[1],1,16382461
+[DMH_INCIDENT].[IncidentTypeId].&[2],2,95301
+[DMH_INCIDENT].[IncidentTypeId].&[3],3,2097264
+[DMH_INCIDENT].[IncidentTypeId].&[4],4,2943489
+[DMH_INCIDENT].[IncidentTypeId].&[5],5,231807
+[DMH_INCIDENT].[IncidentTypeId].&[6],6,1052758
+[DMH_INCIDENT].[IncidentTypeId].&[7],7,457789

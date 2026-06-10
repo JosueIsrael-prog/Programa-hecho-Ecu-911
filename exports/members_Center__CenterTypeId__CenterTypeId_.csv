@@ -1,0 +1,4 @@
+[Center].[CenterTypeId].[CenterTypeId].[MEMBER_UNIQUE_NAME],[Center].[CenterTypeId].[CenterTypeId].[MEMBER_CAPTION],[Measures].[SumaIncidentes]
+[Center].[CenterTypeId].&[2],2,15870333
+[Center].[CenterTypeId].&[3],3,4986353
+[Center].[CenterTypeId].&[4],4,2404183

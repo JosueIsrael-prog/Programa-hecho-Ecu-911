@@ -69,7 +69,7 @@ def get_connection(timeout=None, retries=None, delay=None):
 
     logger = logging.getLogger("db")
     if not logger.handlers:
-        logging.basicConfig(level=logging.INFO)
+        logging.basicConfig(level=logging.WARNING)
 
     last_exc = None
     for attempt in range(1, retries + 1):

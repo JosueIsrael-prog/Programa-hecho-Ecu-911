@@ -64,37 +64,52 @@ class App(tk.Tk):
         for texto, val in opciones:
             tk.Radiobutton(row2, text=texto, variable=self.verif_var, value=str(val)).pack(side="left", padx=6)
 
+        # --- BOTONES DE ACCIÓN PRINCIPALES ---
         row3 = tk.Frame(filt_frame)
         row3.pack(fill="x", pady=(5,0))
-        tk.Button(row3, text="Cargar Datos (BD y Cubo)", command=self.load_all_data, bg="#d9edf7", font=("Arial", 9, "bold")).pack(side="left", padx=5)
-        tk.Button(row3, text="Comparar BD vs Cubo", command=self.load_comparacion, bg="#fcf8e3", font=("Arial", 9, "bold")).pack(side="left", padx=10)
+        tk.Button(row3, text="1. Generar Tablas", command=self.load_all_data, bg="#d9edf7", font=("Arial", 10, "bold"), relief="raised").pack(side="left", padx=5, ipady=2)
+        tk.Button(row3, text="2. Comparar Datos", command=self.load_comparacion, bg="#fcf8e3", font=("Arial", 10, "bold"), relief="raised").pack(side="left", padx=10, ipady=2)
 
-        # notebook (pestañas)
-        nb = ttk.Notebook(self)
-        nb.pack(fill="both", expand=True, padx=10, pady=10)
+        # --- BOTONES PARA CAMBIAR DE VISTA ---
+        row_nav = tk.Frame(filt_frame)
+        row_nav.pack(fill="x", pady=(10,2))
+        tk.Button(row_nav, text="Vista: Base de Datos", command=lambda: self.show_frame(self.tab_bd), bg="#e9ecef", font=("Arial", 9)).pack(side="left", padx=5)
+        tk.Button(row_nav, text="Vista: Cubo", command=lambda: self.show_frame(self.tab_cubo), bg="#e9ecef", font=("Arial", 9)).pack(side="left", padx=5)
+        tk.Button(row_nav, text="Vista: Tabla Comparación", command=lambda: self.show_frame(self.tab_comparacion), bg="#e9ecef", font=("Arial", 9)).pack(side="left", padx=5)
+        tk.Button(row_nav, text="Vista: Detalle de Errores", command=lambda: self.show_frame(self.tab_errores), bg="#e9ecef", font=("Arial", 9)).pack(side="left", padx=5)
+
+        # Contenedor principal para superponer las vistas
+        self.views_container = tk.Frame(self)
+        self.views_container.pack(fill="both", expand=True, padx=10, pady=10)
+        self.views_container.grid_rowconfigure(0, weight=1)
+        self.views_container.grid_columnconfigure(0, weight=1)
 
         # TAB 1: Datos BD
-        self.tab_bd = tk.Frame(nb)
-        nb.add(self.tab_bd, text="Datos Base de Datos")
+        self.tab_bd = tk.Frame(self.views_container)
+        self.tab_bd.grid(row=0, column=0, sticky="nsew")
         self._build_tab_bd()
 
         # TAB 2: Datos Cubo
-        self.tab_cubo = tk.Frame(nb)
-        nb.add(self.tab_cubo, text="Datos Cubo OLAP")
+        self.tab_cubo = tk.Frame(self.views_container)
+        self.tab_cubo.grid(row=0, column=0, sticky="nsew")
         self._build_tab_cubo()
 
         # TAB 3: Comparación
-        self.tab_comparacion = tk.Frame(nb)
-        nb.add(self.tab_comparacion, text="Comparación")
+        self.tab_comparacion = tk.Frame(self.views_container)
+        self.tab_comparacion.grid(row=0, column=0, sticky="nsew")
         self._build_tab_comparacion()
 
         # TAB 4: Detalle de Errores
-        self.tab_errores = tk.Frame(nb)
-        nb.add(self.tab_errores, text="Detalle de Errores")
+        self.tab_errores = tk.Frame(self.views_container)
+        self.tab_errores.grid(row=0, column=0, sticky="nsew")
         self._build_tab_errores()
 
         # cargas iniciales
         self.after(100, self.load_anios)
+        self.show_frame(self.tab_bd)
+
+    def show_frame(self, frame):
+        frame.tkraise()
 
     # ---------------- TAB DATOS BD ----------------
     def _build_tab_bd(self):
@@ -121,7 +136,7 @@ class App(tk.Tk):
         frame.rowconfigure(0, weight=1)
         frame.columnconfigure(0, weight=1)
 
-        self.lbl_total_bd = tk.Label(self.tab_bd, text="Total general BD: 0", font=("Arial", 9, "bold"), fg="blue")
+        self.lbl_total_bd = tk.Label(self.tab_bd, text="Total general BD: 0", font=("Arial", 10, "bold"), fg="blue")
         self.lbl_total_bd.pack(anchor="e", pady=6, padx=10)
 
     # ---------------- TAB DATOS CUBO ----------------
@@ -148,7 +163,7 @@ class App(tk.Tk):
         frame.rowconfigure(0, weight=1)
         frame.columnconfigure(0, weight=1)
 
-        self.lbl_total_cubo = tk.Label(self.tab_cubo, text="Total general Cubo: 0", font=("Arial", 9, "bold"), fg="green")
+        self.lbl_total_cubo = tk.Label(self.tab_cubo, text="Total general Cubo: 0", font=("Arial", 10, "bold"), fg="green")
         self.lbl_total_cubo.pack(anchor="e", pady=6, padx=10)
 
     # ---------------- TAB COMPARACION ----------------
@@ -156,13 +171,12 @@ class App(tk.Tk):
         frame = tk.Frame(self.tab_comparacion)
         frame.pack(fill="both", expand=True, padx=5, pady=5)
 
-        cols = ("Tipo Error", "Ubicación (Centro)", "Hora", "Valor Cubo", "Valor BD", "Diferencia")
+        cols = ("Tipo Error", "Ubicación (Centro)", "Valor Cubo", "Valor BD", "Diferencia")
         self.tree_comp = ttk.Treeview(frame, columns=cols, show="headings")
         for c in cols:
             self.tree_comp.heading(c, text=c)
         self.tree_comp.column("Tipo Error", width=120)
         self.tree_comp.column("Ubicación (Centro)", width=250)
-        self.tree_comp.column("Hora", width=60, anchor="center")
         self.tree_comp.column("Valor Cubo", width=90, anchor="e")
         self.tree_comp.column("Valor BD", width=90, anchor="e")
         self.tree_comp.column("Diferencia", width=90, anchor="e")
@@ -187,13 +201,12 @@ class App(tk.Tk):
         frame = tk.Frame(self.tab_errores)
         frame.pack(fill="both", expand=True, padx=5, pady=5)
 
-        cols = ("Tipo Error", "Ubicación (Centro)", "Campo", "Valores", "Descripción")
+        cols = ("Tipo Error", "Ubicación (Centro)", "Valores", "Descripción")
         self.tree_errores = ttk.Treeview(frame, columns=cols, show="headings")
         for c in cols:
             self.tree_errores.heading(c, text=c)
         self.tree_errores.column("Tipo Error", width=120)
         self.tree_errores.column("Ubicación (Centro)", width=250)
-        self.tree_errores.column("Campo", width=120)
         self.tree_errores.column("Valores", width=200)
         self.tree_errores.column("Descripción", width=300)
 
@@ -256,6 +269,7 @@ class App(tk.Tk):
     def load_all_data(self):
         self.load_bd()
         self.load_cubo()
+        self.show_frame(self.tab_bd)
 
     def load_bd(self):
         fecha = self.cbo_dia.get()
@@ -360,6 +374,7 @@ class App(tk.Tk):
             os.path.join(os.path.expanduser("~"), "Documents", "Cubo"),
             os.path.join(os.path.expanduser("~"), "OneDrive", "Documents", "Cubo"),
             os.path.join(os.path.dirname(__file__), "Cubo"),
+            os.path.join(os.path.dirname(__file__), "Cubos"),
             os.path.join(os.path.dirname(__file__), "..", "Cubo"),
         ]
         used_cubo_path = None
@@ -405,20 +420,21 @@ class App(tk.Tk):
             self.tree_errores.delete(*self.tree_errores.get_children())
 
             for c in res["faltan_en_db"]:
-                self.tree_comp.insert("", "end", values=("Falta en BD", c, "-", "-", "-", "-"), tags=("falta",))
-                self.tree_errores.insert("", "end", values=("Centro Faltante", c, "BD", "-", "Centro existe en Cubo pero no en BD antigua"))
+                self.tree_comp.insert("", "end", values=("Falta en BD", c, "-", "-", "-"), tags=("falta",))
+                self.tree_errores.insert("", "end", values=("Centro Faltante", c, "-", "Centro existe en Cubo pero no en BD antigua"))
             for c in res["faltan_en_cubo"]:
-                self.tree_comp.insert("", "end", values=("Falta en Cubo", c, "-", "-", "-", "-"), tags=("falta",))
-                self.tree_errores.insert("", "end", values=("Centro Faltante", c, "Cubo", "-", "Centro existe en BD pero no en Cubo"))
+                self.tree_comp.insert("", "end", values=("Falta en Cubo", c, "-", "-", "-"), tags=("falta",))
+                self.tree_errores.insert("", "end", values=("Centro Faltante", c, "-", "Centro existe en BD pero no en Cubo"))
             for m in res["mismatches"]:
-                self.tree_comp.insert("", "end", values=("Diferencia de Datos", m["Centro"], f"{m['Hora']}", m["Cubo"], m["DB"], m["Diferencia"]), tags=("diferencia",))
-                self.tree_errores.insert("", "end", values=("Valor Diferente", m["Centro"], f"Hora {m['Hora']}", f"Cubo: {m['Cubo']} / BD: {m['DB']}", f"Diferencia de {m['Diferencia']} incidentes"))
+                self.tree_comp.insert("", "end", values=("Diferencia de Datos", m["Centro"], m["Cubo"], m["DB"], m["Diferencia"]), tags=("diferencia",))
+                self.tree_errores.insert("", "end", values=("Valor Diferente", m["Centro"], f"Cubo: {m['Cubo']} / BD: {m['DB']}", f"Diferencia de {m['Diferencia']} incidentes"))
 
             if not res["faltan_en_db"] and not res["faltan_en_cubo"] and not res["mismatches"]:
-                self.tree_comp.insert("", "end", values=("✅ COINCIDENCIA", "Todos los centros y horas cuadran", "OK", "-", "-", "-"), tags=("coincidencia",))
-                self.tree_errores.insert("", "end", values=("✅ Todo OK", "Sin errores", "-", "-", "No se encontraron discrepancias"))
+                self.tree_comp.insert("", "end", values=("✅ COINCIDENCIA", "Todos los centros cuadran", "OK", "-", "-"), tags=("coincidencia",))
+                self.tree_errores.insert("", "end", values=("✅ Todo OK", "Sin errores", "-", "No se encontraron discrepancias"))
 
             self.lbl_resumen_comp.config(text=" | ".join(res["summary"][:6]) + f"\n\nDetalle: {res['summary'][-1]}")
+            self.show_frame(self.tab_comparacion)
 
         except ImportError as e:
             messagebox.showerror("Falta Módulo", f"No se pudo importar la lógica del cubo.\n\n{e}\n\nAsegúrate de tener instalados los paquetes 'pandas' y 'pywin32'.")

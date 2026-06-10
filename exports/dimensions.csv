@@ -1,0 +1,27 @@
+CATALOG_NAME,SCHEMA_NAME,CUBE_NAME,DIMENSION_NAME,DIMENSION_UNIQUE_NAME,DIMENSION_GUID,DIMENSION_CAPTION,DIMENSION_ORDINAL,DIMENSION_TYPE,DIMENSION_CARDINALITY,DEFAULT_HIERARCHY,DESCRIPTION,IS_VIRTUAL,IS_READWRITE,DIMENSION_UNIQUE_SETTINGS,DIMENSION_MASTER_NAME,DIMENSION_IS_VISIBLE
+TabSanitaria,,Modelo,Center,[Center],,Center,2.0,3,17.0,[Center].[transito],,False,False,1,Center,True
+TabSanitaria,,Modelo,DIVADM,[DIVADM],,DIVADM,3.0,3,1871.0,[DIVADM].[TIPO_UPC],,False,False,1,DIVADM,True
+TabSanitaria,,Modelo,DIVPOL,[DIVPOL],,DIVPOL,4.0,3,1041.0,[DIVPOL].[SHAPE_LENG],,False,False,1,DIVPOL,True
+TabSanitaria,,Modelo,DMH_INCIDENT,[DMH_INCIDENT],,DMH_INCIDENT,5.0,3,23260869.0,[DMH_INCIDENT].[Columna calculada 1],,False,False,1,DMH_INCIDENT,True
+TabSanitaria,,Modelo,DMH_LLAMADAS,[DMH_LLAMADAS],,DMH_LLAMADAS,6.0,3,66886811.0,[DMH_LLAMADAS].[incidentaddress],,False,False,1,DMH_LLAMADAS,True
+TabSanitaria,,Modelo,EstadisticaNivel2,[EstadisticaNivel2],,EstadisticaNivel2,26.0,3,131.0,[EstadisticaNivel2].[CategoryInstitutionId],,False,False,1,EstadisticaNivel2,True
+TabSanitaria,,Modelo,Fecha,[Fecha],,Fecha,7.0,3,2692.0,[Fecha].[JFecha],,False,False,1,Fecha,True
+TabSanitaria,,Modelo,FechaCopia,[FechaCopia],,FechaCopia,21.0,3,2692.0,[FechaCopia].[JFecha],,False,False,1,FechaCopia,True
+TabSanitaria,,Modelo,FechaHora,[FechaHora],,FechaHora,20.0,3,56460.0,[FechaHora].[FechaHora],,False,False,1,FechaHora,True
+TabSanitaria,,Modelo,FechaHoraCopia,[FechaHoraCopia],,FechaHoraCopia,22.0,3,56460.0,[FechaHoraCopia].[FechaHora],,False,False,1,FechaHoraCopia,True
+TabSanitaria,,Modelo,HoraMinSec,[HoraMinSec],,HoraMinSec,8.0,3,86400.0,[HoraMinSec].[Horas],,False,False,1,HoraMinSec,True
+TabSanitaria,,Modelo,IncidentAppAppalTypeDicDetail,[IncidentAppAppalTypeDicDetail],,IncidentAppAppalTypeDicDetail,25.0,3,23.0,[IncidentAppAppalTypeDicDetail].[Description],,False,False,1,IncidentAppAppalTypeDicDetail,True
+TabSanitaria,,Modelo,IncidentAppealTypeDic,[IncidentAppealTypeDic],,IncidentAppealTypeDic,9.0,3,23.0,[IncidentAppealTypeDic].[Description],,False,False,1,IncidentAppealTypeDic,True
+TabSanitaria,,Modelo,IncidentGrade,[IncidentGrade],,IncidentGrade,10.0,3,6.0,[IncidentGrade].[Description],,False,False,1,IncidentGrade,True
+TabSanitaria,,Modelo,IncidentStateDic,[IncidentStateDic],,IncidentStateDic,11.0,3,6.0,[IncidentStateDic].[Description],,False,False,1,IncidentStateDic,True
+TabSanitaria,,Modelo,IncidentType,[IncidentType],,IncidentType,12.0,3,1218.0,[IncidentType].[IncidentTypeId2],,False,False,1,IncidentType,True
+TabSanitaria,,Modelo,InvalidIncidentTypeDic,[InvalidIncidentTypeDic],,InvalidIncidentTypeDic,13.0,3,36.0,[InvalidIncidentTypeDic].[UsedForId],,False,False,1,InvalidIncidentTypeDic,True
+TabSanitaria,,Modelo,InvalidIncidentTypeMaster,[InvalidIncidentTypeMaster],,InvalidIncidentTypeMaster,14.0,3,3.0,[InvalidIncidentTypeMaster].[UsedForId],,False,False,1,InvalidIncidentTypeMaster,True
+TabSanitaria,,Modelo,MalBuenUsoServicio,[MalBuenUsoServicio],,MalBuenUsoServicio,24.0,3,3.0,[MalBuenUsoServicio].[Nombre],,False,False,1,MalBuenUsoServicio,True
+TabSanitaria,,Modelo,Measures,[Measures],,Measures,1.0,2,25.0,[Measures],,False,False,1,Measures,True
+TabSanitaria,,Modelo,OrgInstitution,[OrgInstitution],,OrgInstitution,15.0,3,323.0,[OrgInstitution].[CenterId],,False,False,1,OrgInstitution,True
+TabSanitaria,,Modelo,OrgPerson,[OrgPerson],,OrgPerson,16.0,3,45130.0,[OrgPerson].[OrgPersonHousephone],,False,False,1,OrgPerson,True
+TabSanitaria,,Modelo,ResType,[ResType],,ResType,17.0,3,112.0,[ResType].[CategoryInstitutionId],,False,False,1,ResType,True
+TabSanitaria,,Modelo,Servicio,[Servicio],,Servicio,18.0,3,8.0,[Servicio].[Categoria_Estadistica],,False,False,1,Servicio,True
+TabSanitaria,,Modelo,Servicio2,[Servicio2],,Servicio2,23.0,3,8.0,[Servicio2].[Categoria_Estadistica],,False,False,1,Servicio2,True
+TabSanitaria,,Modelo,Verificador,[Verificador],,Verificador,19.0,3,3.0,[Verificador].[Verificador],,False,False,1,Verificador,True

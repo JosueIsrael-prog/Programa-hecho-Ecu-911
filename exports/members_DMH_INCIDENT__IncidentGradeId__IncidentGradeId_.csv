@@ -1,0 +1,5 @@
+[DMH_INCIDENT].[IncidentGradeId].[IncidentGradeId].[MEMBER_UNIQUE_NAME],[DMH_INCIDENT].[IncidentGradeId].[IncidentGradeId].[MEMBER_CAPTION],[Measures].[SumaIncidentes]
+[DMH_INCIDENT].[IncidentGradeId].&[1],1,4409848
+[DMH_INCIDENT].[IncidentGradeId].&[2],2,2604062
+[DMH_INCIDENT].[IncidentGradeId].&[3],3,8864337
+[DMH_INCIDENT].[IncidentGradeId].&[4],4,7382622

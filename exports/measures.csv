@@ -1,0 +1,7 @@
+CATALOG_NAME,SCHEMA_NAME,CUBE_NAME,MEASURE_NAME,MEASURE_UNIQUE_NAME,MEASURE_CAPTION,MEASURE_GUID,MEASURE_AGGREGATOR,DATA_TYPE,NUMERIC_PRECISION,NUMERIC_SCALE,MEASURE_UNITS,DESCRIPTION,EXPRESSION,MEASURE_IS_VISIBLE,LEVELS_LIST,MEASURE_NAME_SQL_COLUMN_NAME,MEASURE_UNQUALIFIED_CAPTION,MEASUREGROUP_NAME,MEASURE_DISPLAY_FOLDER,DEFAULT_FORMAT_STRING
+TabSanitaria,,Modelo,__Default measure,[Measures].[__Default measure],__Default measure,,127,12,65535,-1,,,1,False,,__Default measure,__Default measure,,,
+TabSanitaria,,Modelo,Suma de incident,[Measures].[Suma de incident],Suma de incident,,0,130,65535,-1,,,"""Suma Incidentes:"" & FORMAT(SUM([incident]),""#,#"")",True,,Suma de incident,Suma de incident,DMH_INCIDENT,,
+TabSanitaria,,Modelo,SumaIncidentes,[Measures].[SumaIncidentes],SumaIncidentes,,0,20,65535,-1,,,SUM([incident]),True,,SumaIncidentes,SumaIncidentes,DMH_INCIDENT,,
+TabSanitaria,,Modelo,Suma de alertas,[Measures].[Suma de alertas],Suma de alertas,,0,20,65535,-1,,,SUM([alertas]),True,,Suma de alertas,Suma de alertas,DMH_LLAMADAS,,
+TabSanitaria,,Modelo,Suma de AGLO,[Measures].[Suma de AGLO],Suma de AGLO,,0,20,65535,-1,,,SUM([AGLO]),True,,Suma de AGLO,Suma de AGLO,DMH_LLAMADAS,,
+TabSanitaria,,Modelo,Suma de AGLOFACTOCORRELACION,[Measures].[Suma de AGLOFACTOCORRELACION],Suma de AGLOFACTOCORRELACION,,0,5,65535,-1,,,SUM([AGLOFACTOCORRELACION]),True,,Suma de AGLOFACTOCORRELACION,Suma de AGLOFACTOCORRELACION,DMH_LLAMADAS,,

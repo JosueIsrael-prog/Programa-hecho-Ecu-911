@@ -14,6 +14,10 @@ FECHA = '2026-03-01'
 OUT_DIR = os.path.join(PROJ_ROOT, 'reports')
 os.makedirs(OUT_DIR, exist_ok=True)
 
+# Apuntar automáticamente a la carpeta arrastrada si no hay otra configurada
+if not os.environ.get('CUBO_PATH'):
+    os.environ['CUBO_PATH'] = os.path.join(PROJ_ROOT, "Cubos")
+
 print('Comparing sources for date', FECHA)
 
 try:
@@ -91,10 +95,10 @@ for s in summary:
 mismatches = res.get('mismatches', [])
 reports_csv = os.path.join(OUT_DIR, f'mismatches_{FECHA}.csv')
 with open(reports_csv, 'w', newline='', encoding='utf-8') as f:
-    writer = csv.DictWriter(f, fieldnames=['Centro','Hora','Cubo','DB','Diferencia'])
+    writer = csv.DictWriter(f, fieldnames=['Centro','Cubo','DB','Diferencia'])
     writer.writeheader()
     for m in mismatches:
-        writer.writerow({'Centro': m['Centro'], 'Hora': m['Hora'], 'Cubo': m['Cubo'], 'DB': m['DB'], 'Diferencia': m['Diferencia']})
+        writer.writerow({'Centro': m['Centro'], 'Cubo': m['Cubo'], 'DB': m['DB'], 'Diferencia': m['Diferencia']})
 
 print('\nMismatches escritos en', reports_csv)
 print('Done')
